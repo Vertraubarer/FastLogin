@@ -232,22 +232,17 @@ public class VerifyResponseTask implements Runnable {
     private boolean enableEncryption(SecretKey loginKey) throws IllegalArgumentException {
         plugin.getLog().info("Enabling onlinemode encryption for {}", player.getAddress());
         // Initialize method reflections
-        if (encryptKeyMethod == null || encryptMethod == null) {
+        if (encryptMethod == null) {
             Class<?> networkManagerClass = MinecraftReflection.getNetworkManagerClass();
+
             try {
-                // Try to get the old (pre MC 1.16.4) encryption method
-                encryptKeyMethod = FuzzyReflection.fromClass(networkManagerClass)
+                encryptMethod = FuzzyReflection.fromClass(networkManagerClass)
                         .getMethodByParameters("a", SecretKey.class);
             } catch (IllegalArgumentException exception) {
-                // Get the new encryption method
                 encryptMethod = FuzzyReflection.fromClass(networkManagerClass)
                         .getMethodByParameters("a", Cipher.class, Cipher.class);
 
-                Class<?> encryptionClass = MinecraftReflection.getMinecraftClass(
-                        "util." + ENCRYPTION_CLASS_NAME, ENCRYPTION_CLASS_NAME
-                );
-
-                // Get the needed Cipher helper method (used to generate ciphers from login key)
+                Class<?> encryptionClass = MinecraftReflection.getMinecraftClass("MinecraftEncryption");
                 cipherMethod = FuzzyReflection.fromClass(encryptionClass)
                         .getMethodByParameters("a", int.class, Key.class);
             }
